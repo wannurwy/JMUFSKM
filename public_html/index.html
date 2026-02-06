@@ -253,48 +253,73 @@ function finish(){
  }
 }
 
-function showResult(dom,track=[]){
- qc.style.display="none"; pc.style.display="none"; result.style.display="block";
+function showResult(dom, track = []) {
+  qc.style.display = "none";
+  pc.style.display = "none";
+  result.style.display = "block";
 
- document.getElementById("result-title").textContent =
-  dom.length>1 ? "Kecenderungan Seimbang" : "Program Dominan: "+dom[0];
+  // ===== TITLE =====
+  document.getElementById("result-title").textContent =
+    dom.length > 1
+      ? "Kecenderungan Seimbang"
+      : "Program Dominan: " + dom[0];
 
- let text="";
- dom.forEach(d=>text+=explainBank[d]+" ");
- if(dom.length>1) text+="Anda sesuai mempertimbangkan kedua-dua program ini.";
-
-if(track.length){
-  text += " Sub-track CS cenderung: ";
-  text += track.map(t => csExplain[t].name).join(", ") + ". ";
-
-  track.forEach(t => {
-    text += csExplain[t].desc + " ";
+  // ===== MAIN EXPLANATION =====
+  let text = "";
+  dom.forEach(d => {
+    text += explainBank[d] + " ";
   });
+
+  if (dom.length > 1) {
+    text += "Anda sesuai mempertimbangkan lebih daripada satu program.";
+  }
+
+  // ===== CS SUB-TRACK EXPLANATION =====
+  if (track.length) {
+    text += " Sub-track CS cenderung: ";
+    text += track.map(t => csExplain[t].name).join(", ") + ". ";
+
+    track.forEach(t => {
+      text += csExplain[t].desc + " ";
+    });
+  }
+
+  document.getElementById("result-explanation").textContent = text;
+
+  // ===== RADAR CHART =====
+  new Chart(document.getElementById("radarChart"), {
+    type: "radar",
+    data: {
+      labels: ["SE", "CS", "IT", "IS"],
+      datasets: [{
+        data: Object.values(scores),
+        backgroundColor: "rgba(99,102,241,0.3)",
+        borderColor: "rgba(99,102,241,1)",
+        borderWidth: 2,
+        pointBackgroundColor: "rgba(99,102,241,1)"
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { r: { beginAtZero: true } }
+    }
+  });
+
+  // ===== ANSWER ANALYSIS =====
+  let html = "<h4 class='font-bold mb-2'>Analisis Jawapan</h4>";
+  log.forEach((l, i) => {
+    html += `
+      <p class="mb-2">
+        ${i + 1}. ${l.q}<br>
+        <span class="text-indigo-600">
+          → Kecenderungan: ${l.to.join(", ")}
+        </span>
+      </p>`;
+  });
+
+  document.getElementById("answer-analysis").innerHTML = html;
 }
 
- document.getElementById("result-explanation").textContent=text;
-
- new Chart(document.getElementById("radarChart"),{
-  type:"radar",
-  data:{
-   labels:["SE","CS","IT","IS"],
-   datasets:[{
-    data:Object.values(scores),
-    backgroundColor:"rgba(99,102,241,0.3)",
-    borderColor:"rgba(99,102,241,1)",
-    borderWidth:2
-   }]
-  },
-  options:{plugins:{legend:{display:false}},scales:{r:{beginAtZero:true}}}
- });
-
- let html="<h4 class='font-bold mb-2'>Analisis Jawapan</h4>";
- log.forEach((l,i)=>{
-  html+=`<p>${i+1}. ${l.q}<br>
-  <span class="text-indigo-600">→ ${l.to.join(", ")}</span></p>`;
- });
- document.getElementById("answer-analysis").innerHTML=html;
-}
 
 // ===================== START / RESTART =====================
 document.getElementById("start-btn").onclick=()=>{
