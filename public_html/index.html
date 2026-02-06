@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computing Mindset Explorer</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap" rel="stylesheet">
+
+</head>
+
+<body class="bg-gradient-to-r from-blue-50 to-indigo-50 font-sans">
+
+<div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-3xl shadow-xl">
+
+  <!-- ===== BRAND HEADER ===== -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <!-- LOGO UMT -->
+      <img src="image/fskm.png" alt="UMT Logo" class="h-14 w-auto object-contain">
+    </div>
+
+<!--    <div class="flex items-center gap-3">
+       FSKM sebagai teks rasmi 
+        <span class="text-2xl font-serif font-semibold" style="color:#003366;">FSKM</span>
+    </div>-->
+
+  </div>
+
+  <h2 class="text-3xl font-bold mb-6 text-center text-indigo-700">
+    Program apa sesuai untuk anda?
+  </h2>
+
+  <!-- ===== START SCREEN ===== -->
+  <div id="start-screen" class="text-center">
+    <p class="mb-6 text-gray-600 max-w-xl mx-auto">
+      Sistem ini membantu anda mengenal pasti kecenderungan pemikiran
+      dalam bidang pengkomputeran berdasarkan cara anda menyelesaikan masalah.
+    </p>
+
+    <button id="start-btn"
+      class="px-10 py-3 bg-gradient-to-r from-indigo-500 to-blue-500
+             text-white rounded-full shadow-lg hover:scale-105 transition">
+      Mula Quiz
+    </button>
+  </div>
+
+  <!-- ===== PROGRESS BAR ===== -->
+  <div id="progress-container"
+       class="hidden w-full bg-gray-200 rounded-full h-4 mb-6">
+    <div id="progress-bar"
+         class="bg-gradient-to-r from-indigo-400 to-blue-500
+                h-4 rounded-full w-0 transition-all">
+    </div>
+  </div>
+
+  <!-- ===== QUIZ ===== -->
+  <div id="quiz-container"></div>
+
+  <!-- ===== RESULT ===== -->
+  <div id="result" class="hidden mt-6 p-6 bg-indigo-50 rounded-2xl shadow-xl">
+
+    <h3 id="result-title"
+        class="text-2xl font-bold mb-3 text-indigo-700"></h3>
+
+    <p id="result-explanation"
+       class="mb-4 text-gray-700"></p>
+
+    <canvas id="radarChart" height="280"></canvas>
+
+    <div id="answer-analysis"
+         class="mt-6 text-sm text-gray-700"></div>
+
+    <button id="restart-btn"
+      class="mt-6 px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500
+             text-white rounded-full hover:scale-105 transition">
+      Restart Quiz
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ===================== QUESTIONS =====================
+const questions = [
+ {q:"Bila berdepan masalah besar, apa langkah pertama anda?",
+  a:["Terus cuba","Pecahkan jadi kecil","Tunggu arahan","Elakkan"],
+  m:[{SE:2},{SE:2,CS:1},{IT:1},{IS:1}]},
+
+ {q:"Anda lebih puas apabila?",
+  a:["Sistem berfungsi","Faham konsep","Operasi stabil","Orang puas hati"],
+  m:[{SE:2},{CS:2},{IT:2},{IS:2}]},
+
+ {q:"Cara belajar kegemaran anda?",
+  a:["Cuba walau salah","Faham teori","Ikut contoh","Ikut panduan"],
+  m:[{SE:2},{CS:2},{IT:1},{IS:1}]},
+
+ {q:"Dalam kerja kumpulan, anda biasanya?",
+  a:["Bina solusi","Fikir keseluruhan","Ikut arahan","Jaga komunikasi"],
+  m:[{SE:2},{CS:2},{IT:1},{IS:2}]},
+
+ {q:"Bila sistem gagal?",
+  a:["Debug & baiki","Analisis punca","Reset/konfigurasi","Maklumkan pihak terlibat"],
+  m:[{SE:2},{CS:2},{IT:2},{IS:1}]},
+
+ {q:"Anda selesa bekerja dengan?",
+  a:["Kod & modul","Algoritma","Server & sistem","Manusia & proses"],
+  m:[{SE:2},{CS:2},{IT:2},{IS:2}]},
+
+ {q:"Projek paling menarik?",
+  a:["Bangun aplikasi","Masalah abstrak","Sistem rangkaian","Sistem organisasi"],
+  m:[{SE:2},{CS:2},{IT:2},{IS:2}]},
+
+ {q:"Apabila tiada jawapan jelas?",
+  a:["Cuba pelbagai cara","Eksperimen","Cari SOP","Rujuk pihak lain"],
+  m:[{SE:2},{CS:2},{IT:1},{IS:1}]}
+];
+
+// ===================== CS SUBTRACK =====================
+const csSpecial = [
+ {q:"Anda lebih tertarik kepada?",
+  a:["Alam & data laut","Aplikasi pengguna","Keselamatan data"],
+  m:[{Maritim:2},{Mobile:2},{Cloud:2}]},
+
+ {q:"Masalah menarik bagi anda?",
+  a:["Sensor & persekitaran","App pantas","Serangan siber"],
+  m:[{Maritim:2},{Mobile:2},{Cloud:2}]},
+
+ {q:"Kepuasan bila teknologi?",
+  a:["Bantu kelestarian","Digunakan ramai","Cegah ancaman"],
+  m:[{Maritim:2},{Mobile:2},{Cloud:2}]}
+];
+
+// ===================== EXPLANATION =====================
+const explainBank = {
+ SE:"Jawapan anda menunjukkan kecenderungan membina sistem dan menyelesaikan masalah praktikal secara berstruktur.",
+ CS:"Anda cenderung kepada pemikiran analitikal, teori dan pemahaman mendalam tentang bagaimana sistem berfungsi.",
+ IT:"Anda menunjukkan minat dalam memastikan sistem berjalan lancar, stabil dan menyokong operasi.",
+ IS:"Anda lebih selesa bekerja dengan manusia, proses dan aplikasi sistem dalam organisasi."
+};
+
+const csExplain = {
+ Maritim:"Fokus kepada teknologi marin, data alam dan kelestarian.",
+ Mobile:"Fokus kepada pembangunan aplikasi mudah alih dan pengalaman pengguna.",
+ Cloud:"Fokus kepada keselamatan sistem dan perlindungan data."
+};
+
+// ===================== STATE =====================
+let current=0, phase="main";
+let scores={SE:0,CS:0,IT:0,IS:0};
+let csScore={Maritim:0,Mobile:0,Cloud:0};
+let log=[];
+
+// ===================== ELEMENTS =====================
+const qc=document.getElementById("quiz-container");
+const pb=document.getElementById("progress-bar");
+const pc=document.getElementById("progress-container");
+const start=document.getElementById("start-screen");
+const result=document.getElementById("result");
+
+// ===================== FUNCTIONS =====================
+function updateProgress(total,cur){
+ pb.style.width=Math.round((cur/total)*100)+"%";
+}
+
+function showQuestion(set){
+ qc.innerHTML="";
+ const q=set[current];
+ updateProgress(set.length,current);
+
+ const box=document.createElement("div");
+ box.className="p-6 bg-white rounded-xl shadow border-l-4 border-indigo-400";
+ box.innerHTML=`<p class="font-semibold mb-4">${current+1}. ${q.q}</p>`;
+
+ q.a.forEach((ans,i)=>{
+  box.innerHTML+=`
+   <label class="block mb-2 cursor-pointer">
+    <input type="radio" name="ans" value="${i}" class="mr-2">${ans}
+   </label>`;
+ });
+
+ const btn=document.createElement("button");
+ btn.textContent=current===set.length-1?"Hantar":"Seterusnya";
+ btn.className="mt-4 px-5 py-2 bg-indigo-500 text-white rounded-full";
+ btn.onclick=()=>next(set);
+ box.appendChild(btn);
+ qc.appendChild(box);
+}
+
+function next(set){
+ const sel=document.querySelector("input[name=ans]:checked");
+ if(!sel){alert("Sila pilih jawapan");return;}
+
+ const map=set[current].m[sel.value];
+ log.push({q:set[current].q, to:Object.keys(map)});
+
+ for(let k in map){
+  phase==="main" ? scores[k]+=map[k] : csScore[k]+=map[k];
+ }
+
+ current++;
+ current<set.length ? showQuestion(set) : finish();
+}
+
+function finish(){
+ pb.style.width="100%";
+
+ if(phase==="main"){
+  const max=Math.max(...Object.values(scores));
+  const top=Object.keys(scores).filter(k=>scores[k]===max);
+
+  if(top.includes("CS")){
+    phase="cs"; current=0;
+    showQuestion(csSpecial);
+  }else showResult(top);
+ }else{
+  const max=Math.max(...Object.values(csScore));
+  const track=Object.keys(csScore).filter(k=>csScore[k]===max);
+  showResult(["CS"],track);
+ }
+}
+
+function showResult(dom,track=[]){
+ qc.style.display="none"; pc.style.display="none"; result.style.display="block";
+
+ document.getElementById("result-title").textContent =
+  dom.length>1 ? "Kecenderungan Seimbang" : "Program Dominan: "+dom[0];
+
+ let text="";
+ dom.forEach(d=>text+=explainBank[d]+" ");
+ if(dom.length>1) text+="Anda sesuai mempertimbangkan kedua-dua program ini.";
+
+ if(track.length){
+  text+=" Sub-track CS cenderung: "+track.join(", ")+". ";
+  track.forEach(t=>text+=csExplain[t]+" ");
+ }
+
+ document.getElementById("result-explanation").textContent=text;
+
+ new Chart(document.getElementById("radarChart"),{
+  type:"radar",
+  data:{
+   labels:["SE","CS","IT","IS"],
+   datasets:[{
+    data:Object.values(scores),
+    backgroundColor:"rgba(99,102,241,0.3)",
+    borderColor:"rgba(99,102,241,1)",
+    borderWidth:2
+   }]
+  },
+  options:{plugins:{legend:{display:false}},scales:{r:{beginAtZero:true}}}
+ });
+
+ let html="<h4 class='font-bold mb-2'>Analisis Jawapan</h4>";
+ log.forEach((l,i)=>{
+  html+=`<p>${i+1}. ${l.q}<br>
+  <span class="text-indigo-600">→ ${l.to.join(", ")}</span></p>`;
+ });
+ document.getElementById("answer-analysis").innerHTML=html;
+}
+
+// ===================== START / RESTART =====================
+document.getElementById("start-btn").onclick=()=>{
+ start.style.display="none"; pc.classList.remove("hidden");
+ showQuestion(questions);
+};
+
+document.getElementById("restart-btn").onclick=()=>location.reload();
+</script>
+
+</body>
+</html>
