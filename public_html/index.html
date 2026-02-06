@@ -263,10 +263,14 @@ function showResult(dom,track=[]){
  dom.forEach(d=>text+=explainBank[d]+" ");
  if(dom.length>1) text+="Anda sesuai mempertimbangkan kedua-dua program ini.";
 
- if(track.length){
-  text+=" Sub-track CS cenderung: "+track.join(", ")+". ";
-  track.forEach(t=>text+=csExplain[t]+" ");
- }
+if(track.length){
+  text += " Sub-track CS cenderung: ";
+  text += track.map(t => csExplain[t].name).join(", ") + ". ";
+
+  track.forEach(t => {
+    text += csExplain[t].desc + " ";
+  });
+}
 
  document.getElementById("result-explanation").textContent=text;
 
